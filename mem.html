@@ -1,0 +1,306 @@
+<style>
+* { font-family: "Arial"; }
+html, body, div, input { font-size: 2rem; }
+select, #total, #wrong { font-size: 1.3rem; }
+#bar { display: flex;  padding: 0 15px 0 0; }
+select { flex-grow: 1; }
+#quiz-select { max-width: 80%; }
+#total { padding: 0 10px 0; }
+#total, #wrong { min-width: 10%; text-align: center; }
+#question { text-align: center; min-height: 10%; }
+#error-message { text-align: center; min-height: 10%; }
+#answer { width: 100%; text-align: center; min-height: 10%; }
+.root { border-top: 4px solid; }
+#log { font-size: 1.3rem; text-align: center; }
+</style>
+
+<body>
+<div id="bar">
+<select id="quiz-select"></select>
+<div id="total">0</div>
+<div id="wrong">0</div>
+</div><hr>
+<div id="question"></div><hr>
+<div id="error-message"></div><hr>
+<input id="answer" type="number" /><hr>
+<div id="log"></div>
+</body>
+
+<script>
+const data = {
+	"triplets": [
+		[3, 4, 5],	// 0
+		[5, 12, 13],	// 1
+		[8, 15, 17],	// 2
+		[7, 24, 25],	// 3
+		[20, 21, 29],	// 4
+		[12, 35, 37],	// 5
+		[9, 40, 41],	// 6
+		[28, 45, 53],	// 7
+		[11, 60, 61],	// 8
+		[33, 56, 65],	// 9
+		[16, 63, 65],	// 10
+		[48, 55, 73],	// 11
+		[13, 84, 85],	// 12
+		[36, 77, 85],	// 13
+		[39, 80, 89],	// 14
+		[65, 72, 97],	// 15
+		[20, 99, 101],	// 16
+		[60, 91, 109],	// 17
+		[15, 112, 113],	// 18
+		[44, 117, 125],	// 19
+		[88, 105, 137],	// 20
+		[17, 144, 145],	// 21
+		[24, 143, 145],	// 22
+		[51, 140, 149],	// 23
+		[85, 132, 157],	// 24
+		[119, 120, 169],// 25
+		[52, 165, 173],	// 26
+		[19, 180, 181],	// 27
+		[57, 176, 185],	// 28
+		[104, 153, 185],// 29
+		[95, 168, 193],	// 30
+		[28, 195, 197],	// 31
+	],
+	"percentages": [
+		{ "n": 2, "pc2": 50, "pc4": 50, "mfrac": { "i": 50, "n": 0, "d": 1 } },
+		{ "n": 3, "pc2": 33.33, "pc4": 33.3333, "mfrac": { "i": 33, "n": 1, "d": 3 } },
+		{ "n": 4, "pc2": 25, "pc4": 25, "mfrac": { "i": 25, "n": 0, "d": 1 } },
+		{ "n": 5, "pc2": 20, "pc4": 20, "mfrac": { "i": 20, "n": 0, "d": 1 } },
+		{ "n": 6, "pc2": 16.66, "pc4": 16.6666, "mfrac": { "i": 16, "n": 2, "d": 3 } },
+		{ "n": 7, "pc2": 14.28, "pc4": 14.2857, "mfrac": { "i": 14, "n": 2, "d": 7 } },
+		{ "n": 8, "pc2": 12.5, "pc4": 12.5, "mfrac": { "i": 12, "n": 1, "d": 2 } },
+		{ "n": 9, "pc2": 11.11, "pc4": 11.1111, "mfrac": { "i": 11, "n": 1, "d": 9 } },
+		{ "n": 10, "pc2": 10, "pc4": 10, "mfrac": { "i": 10, "n": 0, "d": 1 } },
+		{ "n": 11, "pc2": 9.09, "pc4": 9.0909, "mfrac": { "i": 9, "n": 1, "d": 11 } },
+		{ "n": 12, "pc2": 8.33, "pc4": 8.3333, "mfrac": { "i": 8, "n": 1, "d": 3 } },
+		{ "n": 13, "pc2": 7.69, "pc4": 7.6923, "mfrac": { "i": 7, "n": 9, "d": 13 } },
+		{ "n": 14, "pc2": 7.14, "pc4": 7.1428, "mfrac": { "i": 7, "n": 1, "d": 7 } },
+		{ "n": 15, "pc2": 6.66, "pc4": 6.6666, "mfrac": { "i": 6, "n": 2, "d": 3 } },
+		{ "n": 16, "pc2": 6.25, "pc4": 6.25, "mfrac": { "i": 6, "n": 1, "d": 4 } },
+		{ "n": 17, "pc2": 5.88, "pc4": 5.8823, "mfrac": { "i": 5, "n": 15, "d": 17 } },
+		{ "n": 18, "pc2": 5.55, "pc4": 5.5555, "mfrac": { "i": 5, "n": 5, "d": 9 } },
+		{ "n": 19, "pc2": 5.26, "pc4": 5.2631, "mfrac": { "i": 5, "n": 5, "d": 19 } },
+		{ "n": 20, "pc2": 5, "pc4": 5, "mfrac": { "i": 5, "n": 0, "d": 1 } },
+		{ "n": 21, "pc2": 4.76, "pc4": 4.7619, "mfrac": { "i": 4, "n": 16, "d": 21 } },
+		{ "n": 22, "pc2": 4.54, "pc4": 4.5454, "mfrac": { "i": 4, "n": 6, "d": 11 } },
+		{ "n": 23, "pc2": 4.34, "pc4": 4.3478, "mfrac": { "i": 4, "n": 8, "d": 23 } },
+		{ "n": 24, "pc2": 4.16, "pc4": 4.1666, "mfrac": { "i": 4, "n": 1, "d": 6 } },
+		{ "n": 25, "pc2": 4, "pc4": 4, "mfrac": { "i": 4, "n": 0, "d": 1 } },
+	],
+};
+
+function frac2html(n, d) {
+	let nstyle = dstyle = "margin: 0 auto;";
+	if (n.toString().length > d.toString().length) {
+		nstyle += "border-bottom: 4px solid;";
+	} else {
+		dstyle += "border-top: 4px solid;";
+	}
+	return	`<span style="display: inline-flex; flex-direction: column; vertical-align: middle;">` +
+		`<span style="${nstyle}">${n}</span>` +
+		`<span style="${dstyle}">${d}</span>` +
+		`</span>`;
+}
+
+function mfrac2html(mfrac) {
+	return mfrac.n === 0
+		? `${mfrac.i}`
+		: `${mfrac.i} ${frac2html(mfrac.n, mfrac.d)}`;
+}
+
+function qna(q, a) {
+	return { "question": q, "answer": a };
+}
+
+const quizzes = {
+	"triplets": {
+		"range": { "min": 0, "max": 18 },
+		"map": x => data.triplets[x],
+		"questions": [
+			x => qna(`${x[1]} ${x[2]}`, x[0]),
+			x => qna(`${x[2]} ${x[1]}`, x[0]),
+			x => qna(`${x[0]} ${x[2]}`, x[1]),
+			x => qna(`${x[2]} ${x[0]}`, x[1]),
+			x => qna(`${x[0]} ${x[1]}`, x[2]),
+			x => qna(`${x[1]} ${x[0]}`, x[2]),
+		],
+	},
+	"squares": {
+		"range": { "min": 2, "max": 32 },
+		"map": x => x,
+		"questions": [
+			x => qna(`${x}<sup>2</sup>`, x**2),
+			x => qna(`&Sqrt;<span class="root">${x**2}</span>`, x),
+		],
+	},
+	"cubes": {
+		"range": { "min": 2, "max": 21 },
+		"map": x => x,
+		"questions": [
+			x => qna(`${x}<sup>3</sup>`, x**3),
+			x => qna(`&#8731;<span class="root">${x**3}</span>`, x),
+		],
+	},
+	"tables": {
+		"range": { "min": 120, "max": 199 },
+		"map": x => ({ "a": (x - (x % 10))/10, "b": (x % 10) + 1 }),
+		"questions": [
+			x => qna(`${x.a} &times ${x.b}`, x.a * x.b),
+			x => qna(`${x.b} &times ${x.a}`, x.a * x.b),
+			x => qna(frac2html(x.a * x.b, x.a), x.b),
+			x => qna(frac2html(x.a * x.b, x.b), x.a),
+		],
+	},
+	"percentages": {
+		"range": { "min": 0, "max": data.percentages.length - 1 },
+		"map": x => data.percentages[x],
+		"questions": [
+			x => qna(`${frac2html(1, x.n)} in %`, x.pc2),
+			x => qna(`${x.pc4}% = ${frac2html(1, "?")}`, x.n),
+			x => qna(`${mfrac2html(x.mfrac)}% = ${frac2html(1, "?")}`, x.n),
+			x => qna(`${mfrac2html(x.mfrac)}% in %`, x.pc2),
+		],
+	},
+	"alphabets": {
+		"range": { "min": 1, "max": 26 },
+		"map": x => ({ "num": x, "letter": "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[x-1] }),
+		"questions": [
+			x => qna(`${x.letter}`, x.num),
+			x => qna(`${x.num}`, x.letter),
+		],
+	},
+
+/*
+	"_test": {
+		"range": { "min": 1, "max": 2 },
+		"map": x => x,
+		"questions": [
+			x => ({ "question": `${x}+1`, "answer": x+1 }),
+			x => ({ "question": `${x}+2`, "answer": x+2 }),
+		]
+	}
+*/
+};
+
+function randint(min, max) { return Math.floor(Math.random() * (max - min + 1) + min); }
+function randchoice(arr) { return arr[randint(0, arr.length-1)]; }
+
+function shuffle_in_place(array) {
+	const len = array.length;
+	for (let i = 0; i < len; i++) {
+		const j = randint(i, len-1);
+		const temp = array[i];
+		array[i] = array[j];
+		array[j] = temp;
+	}
+}
+
+const QORDER = "_qorder";
+function set_question_order(quizzes) {
+	for (const qname in quizzes) {
+		const arr = [];
+		const r = quizzes[qname].range;
+		for (let i = r.min; i <= r.max; i++) {
+			for (let j = 0; j < quizzes[qname].questions.length; j++)
+				arr.push([i, j]);
+		}
+		shuffle_in_place(arr);
+		console.assert(
+			QORDER in quizzes[qname] === false,
+			`quiz "${qname}": property name "${QORDER}" is reserved`,
+		);
+		quizzes[qname][QORDER] = arr.values();
+	}
+}
+
+const	Q = document.getElementById("question"),
+	E = document.getElementById("error-message"),
+	A = document.getElementById("answer"),
+	T = document.getElementById("total"),
+	W = document.getElementById("wrong"),
+	S = document.getElementById("quiz-select"),
+	L = document.getElementById("log");
+
+const MIX_QUIZ = "all";
+console.assert(
+	MIX_QUIZ in quizzes === false,
+	`quiz name "${MIX_QUIZ}" is reserved`
+);
+
+const mixopt = new Option(MIX_QUIZ, MIX_QUIZ);
+S.options.add(mixopt);
+
+let total_q = 0;
+for (const qname in quizzes) {
+	const r = quizzes[qname].range;
+	const d = r.max - r.min + 1;
+	const v = quizzes[qname].questions.length;
+	const q =  d * v;
+	S.options.add(new Option(`${qname} (${q})`, qname));
+	total_q += q;
+}
+
+mixopt.text += ` (${total_q})`;
+
+set_question_order(quizzes);
+const active_quizzes = new Set(Object.keys(quizzes));
+function nextQuestion(quizname) {
+	if (active_quizzes.size == 0)
+		return;
+
+	const qkey = (quizname === MIX_QUIZ)
+		? randchoice(Array.from(active_quizzes))
+		: quizname;
+
+	const next = quizzes[qkey][QORDER].next();
+	if (!next.value || next.done) {
+		if (quizname != MIX_QUIZ)
+			return;
+		active_quizzes.delete(qkey);
+		return nextQuestion(MIX_QUIZ);
+	}
+	const di = next.value[0];
+	const qi = next.value[1];
+	const quiz = quizzes[qkey];
+	return quiz.questions[qi](quiz.map(di));
+}
+
+let ntotal = -1, nwrong = 0;
+let correctAnswer = "";
+
+const KEYCODE_ENTER = 13;
+A.addEventListener("keyup", (event) => {
+	if (event.keyCode != KEYCODE_ENTER)
+		return;
+
+	nextQuest = nextQuestion(S.value);
+	if (!nextQuest) {
+		alert(`No more questions in "${S.value}".`);
+		return;
+	}
+
+	if (A.type == "text")
+		A.value = A.value.toUpperCase();
+
+	if (A.value == correctAnswer) {
+		E.innerHTML = "";
+	} else {
+		W.innerHTML = ++nwrong;
+		const msg = `${Q.innerHTML} = ${correctAnswer} &ne; ${A.value}`;
+		E.innerHTML = msg;
+		L.insertAdjacentHTML("beforeend", "<br>" + msg);
+	}
+	T.innerHTML = ++ntotal;
+	A.value = "";
+
+	Q.innerHTML = nextQuest.question;
+	correctAnswer = nextQuest.answer;
+	A.type = { "number": "number", "string": "text" }[typeof(correctAnswer)];
+});
+
+S.addEventListener("change", (event) => {
+	A.focus();
+});
+
+</script>
