@@ -1,16 +1,17 @@
 <style>
-* { font-family: "Arial"; }
+#bar { font-family: serif; }
 html, body, div, input { font-size: 2rem; }
 select, #total, #wrong { font-size: 1.3rem; }
-#bar { display: flex;  padding: 0 15px 0 0; }
-select { flex-grow: 1; }
 #quiz-select { max-width: 80%; }
 #total { padding: 0 10px 0; }
+.root { border-top: 4px solid; }
+#log { font-size: 1.3rem; text-align: center; }
+#bar { display: flex;  padding: 0 15px 0 0; }
+select { flex-grow: 1; font-family: inherit; }
 #total, #wrong { min-width: 10%; text-align: center; }
 #question { text-align: center; min-height: 10%; }
 #error-message { text-align: center; min-height: 10%; }
 #answer { width: 100%; text-align: center; min-height: 10%; }
-.root { border-top: 4px solid; }
 #log { font-size: 1.3rem; text-align: center; }
 </style>
 
@@ -25,6 +26,9 @@ select { flex-grow: 1; }
 <input id="answer" type="number" /><hr>
 <div id="log"></div>
 </body>
+
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
 <script>
 const data = {
@@ -90,23 +94,10 @@ const data = {
 	],
 };
 
-function frac2html(n, d) {
-	let nstyle = dstyle = "margin: 0 auto;";
-	if (n.toString().length > d.toString().length) {
-		nstyle += "border-bottom: 4px solid;";
-	} else {
-		dstyle += "border-top: 4px solid;";
-	}
-	return	`<span style="display: inline-flex; flex-direction: column; vertical-align: middle;">` +
-		`<span style="${nstyle}">${n}</span>` +
-		`<span style="${dstyle}">${d}</span>` +
-		`</span>`;
-}
-
 function mfrac2html(mfrac) {
 	return mfrac.n === 0
 		? `${mfrac.i}`
-		: `${mfrac.i} ${frac2html(mfrac.n, mfrac.d)}`;
+		: `${mfrac.i} \\frac{${mfrac.n}}{${mfrac.d}}`;
 }
 
 function qna(q, a) {
@@ -118,48 +109,48 @@ const quizzes = {
 		"range": { "min": 0, "max": 18 },
 		"map": x => data.triplets[x],
 		"questions": [
-			x => qna(`${x[1]} ${x[2]}`, x[0]),
-			x => qna(`${x[2]} ${x[1]}`, x[0]),
-			x => qna(`${x[0]} ${x[2]}`, x[1]),
-			x => qna(`${x[2]} ${x[0]}`, x[1]),
-			x => qna(`${x[0]} ${x[1]}`, x[2]),
-			x => qna(`${x[1]} ${x[0]}`, x[2]),
+			x => qna(`${x[1]}, ${x[2]}, ?`, x[0]),
+			x => qna(`${x[2]}, ${x[1]}, ?`, x[0]),
+			x => qna(`${x[0]}, ${x[2]}, ?`, x[1]),
+			x => qna(`${x[2]}, ${x[0]}, ?`, x[1]),
+			x => qna(`${x[0]}, ${x[1]}, ?`, x[2]),
+			x => qna(`${x[1]}, ${x[0]}, ?`, x[2]),
 		],
 	},
 	"squares": {
 		"range": { "min": 2, "max": 32 },
 		"map": x => x,
 		"questions": [
-			x => qna(`${x}<sup>2</sup>`, x**2),
-			x => qna(`&Sqrt;<span class="root">${x**2}</span>`, x),
+			x => qna(`${x}^2`, x**2),
+			x => qna(`\\sqrt{${x**2}}`, x),
 		],
 	},
 	"cubes": {
 		"range": { "min": 2, "max": 21 },
 		"map": x => x,
 		"questions": [
-			x => qna(`${x}<sup>3</sup>`, x**3),
-			x => qna(`&#8731;<span class="root">${x**3}</span>`, x),
+			x => qna(`${x}^3`, x**3),
+			x => qna(`\\sqrt[3]{${x**3}}`, x),
 		],
 	},
 	"tables": {
 		"range": { "min": 120, "max": 199 },
 		"map": x => ({ "a": (x - (x % 10))/10, "b": (x % 10) + 1 }),
 		"questions": [
-			x => qna(`${x.a} &times ${x.b}`, x.a * x.b),
-			x => qna(`${x.b} &times ${x.a}`, x.a * x.b),
-			x => qna(frac2html(x.a * x.b, x.a), x.b),
-			x => qna(frac2html(x.a * x.b, x.b), x.a),
+			x => qna(`${x.a} \\times ${x.b}`, x.a * x.b),
+			x => qna(`${x.b} \\times ${x.a}`, x.a * x.b),
+			x => qna(`\\frac{${x.a * x.b}}{${x.a}}`, x.b),
+			x => qna(`\\frac{${x.a * x.b}}{${x.b}}`, x.a),
 		],
 	},
 	"percentages": {
 		"range": { "min": 0, "max": data.percentages.length - 1 },
 		"map": x => data.percentages[x],
 		"questions": [
-			x => qna(`${frac2html(1, x.n)} in %`, x.pc2),
-			x => qna(`${x.pc4}% = ${frac2html(1, "?")}`, x.n),
-			x => qna(`${mfrac2html(x.mfrac)}% = ${frac2html(1, "?")}`, x.n),
-			x => qna(`${mfrac2html(x.mfrac)}% in %`, x.pc2),
+			x => qna(`\\frac{1}{${x.n}}\\,\\textrm{in}\\,\\%`, x.pc2),
+			x => qna(`${x.pc4}\\% = \\frac{1}{?}`, x.n),
+			x => qna(`${mfrac2html(x.mfrac)}\\% = \\frac{1}{?}`, x.n),
+			x => qna(`${mfrac2html(x.mfrac)}\\%\\,\\textrm{in}\\,\\%`, x.pc2),
 		],
 	},
 	"alphabets": {
@@ -171,16 +162,16 @@ const quizzes = {
 		],
 	},
 
-/*
+
 	"_test": {
-		"range": { "min": 1, "max": 2 },
+		"range": { "min": 1, "max": 3 },
 		"map": x => x,
 		"questions": [
-			x => ({ "question": `${x}+1`, "answer": x+1 }),
-			x => ({ "question": `${x}+2`, "answer": x+2 }),
+			x => ({ "question": `${x} \\times 2`, "answer": x*2 }),
+			x => ({ "question": `${x} \\times 3`, "answer": x*3 }),
 		]
 	}
-*/
+
 };
 
 function randint(min, max) { return Math.floor(Math.random() * (max - min + 1) + min); }
@@ -267,8 +258,14 @@ function nextQuestion(quizname) {
 	return quiz.questions[qi](quiz.map(di));
 }
 
+function mathWrap(math) {
+	return `\\( ${math} \\)`;
+}
+
 let ntotal = -1, nwrong = 0;
 let correctAnswer = "";
+
+var prevQuestion;
 
 const KEYCODE_ENTER = 13;
 A.addEventListener("keyup", (event) => {
@@ -288,16 +285,19 @@ A.addEventListener("keyup", (event) => {
 		E.innerHTML = "";
 	} else {
 		W.innerHTML = ++nwrong;
-		const msg = `${Q.innerHTML} = ${correctAnswer} &ne; ${A.value}`;
+		const msg = mathWrap(`${prevQuestion} = ${correctAnswer} \\ne ${A.value}`);
 		E.innerHTML = msg;
 		L.insertAdjacentHTML("beforeend", "<br>" + msg);
 	}
 	T.innerHTML = ++ntotal;
 	A.value = "";
 
-	Q.innerHTML = nextQuest.question;
+	Q.innerHTML = mathWrap(nextQuest.question);
 	correctAnswer = nextQuest.answer;
 	A.type = { "number": "number", "string": "text" }[typeof(correctAnswer)];
+
+	MathJax.typeset();
+	prevQuestion = nextQuest.question;
 });
 
 S.addEventListener("change", (event) => {
